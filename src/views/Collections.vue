@@ -27,18 +27,20 @@
             </td>
             <td>
               <div class="btn-group btn-group-sm">
-                <button type="button" class="btn btn-outline-secondary">
-                  <span
-                    class="spinner-border spinner-grow-sm"
-                    @click="getPainting(painting.id)"
-                  ></span>
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary"
+                  @click="getPainting(painting.id)"
+                >
+                  <span class="spinner-border spinner-grow-sm"></span>
                   畫作細節
                 </button>
-                <button type="button" class="btn btn-outline-danger">
-                  <span
-                    class="spinner-border spinner-grow-sm"
-                    @click="addToCollection(painting.id)"
-                  ></span>
+                <button
+                  type="button"
+                  class="btn btn-outline-danger"
+                  @click="addToCollection(painting.id)"
+                >
+                  <span class="spinner-border spinner-grow-sm"></span>
                   加到收藏
                 </button>
               </div>
@@ -48,7 +50,9 @@
       </table>
       <!-- 購物車列表 -->
       <div class="text-end">
-        <button class="btn btn-outline-danger" type="button">清空購物車</button>
+        <button class="btn btn-outline-danger" type="button" @click="removeCollections">
+          清空收藏
+        </button>
       </div>
       <table class="table align-middle">
         <thead>
@@ -82,7 +86,7 @@
                 </div>
               </td>
               <td>
-                {{ collection.product.content }}
+                {{ collection.product.size }}
               </td>
             </tr>
           </template>
@@ -107,21 +111,7 @@
     </div>
 
     <div class="my-5 row justify-content-center">
-      <Form ref="form" class="col-md-6" v-slot="{ errors }">
-        <div class="mb-3">
-          <label for="email" class="form-label">Email</label>
-          <Field
-            id="email"
-            name="email"
-            type="email"
-            class="form-control"
-            :class="{ 'is-invalid': errors['email'] }"
-            placeholder="請輸入 Email"
-            rules="email|required"
-          ></Field>
-          <ErrorMessage name="email" class="invalid-feedback"></ErrorMessage>
-        </div>
-
+      <Form ref="collectionForm" class="col-md-6" v-slot="{ errors }" @submit="sendCollections">
         <div class="mb-3">
           <label for="name" class="form-label">收件人姓名</label>
           <Field
@@ -129,11 +119,27 @@
             name="姓名"
             type="text"
             class="form-control"
+            v-model="data.user.name"
             :class="{ 'is-invalid': errors['姓名'] }"
             placeholder="請輸入姓名"
             rules="required"
           ></Field>
           <ErrorMessage name="姓名" class="invalid-feedback"></ErrorMessage>
+        </div>
+
+        <div class="mb-3">
+          <label for="email" class="form-label">Email</label>
+          <Field
+            id="email"
+            name="email"
+            type="email"
+            class="form-control"
+            v-model="data.user.email"
+            :class="{ 'is-invalid': errors['email'] }"
+            placeholder="請輸入 Email"
+            rules="email|required"
+          ></Field>
+          <ErrorMessage name="email" class="invalid-feedback"></ErrorMessage>
         </div>
 
         <div class="mb-3">
@@ -143,6 +149,7 @@
             name="電話"
             type="tel"
             class="form-control"
+            v-model="data.user.tel"
             :class="{ 'is-invalid': errors['電話'] }"
             placeholder="請輸入電話"
             rules="required|min:8|max:10"
@@ -157,6 +164,7 @@
             name="地址"
             type="text"
             class="form-control"
+            v-model="data.user.address"
             :class="{ 'is-invalid': errors['地址'] }"
             placeholder="請輸入地址"
             rules="required"
@@ -166,10 +174,18 @@
 
         <div class="mb-3">
           <label for="message" class="form-label">給畫家的話</label>
-          <textarea name="" id="message" class="form-control" cols="30" rows="10"></textarea>
+          <Field
+            name="message"
+            id="message"
+            class="form-control"
+            v-model="data.message"
+            cols="30"
+            rows="10"
+            as="textarea"
+          ></Field>
         </div>
         <div class="text-end">
-          <button class="btn btn-danger">送出收藏</button>
+          <button class="btn btn-danger" type="submit">送出收藏</button>
         </div>
       </Form>
     </div>
@@ -182,7 +198,18 @@ export default {
     return {
       paintings: [],
       painting: {},
-      collections: {},
+      collections: {
+        carts: [],
+      },
+      data: {
+        user: {
+          name: '',
+          email: '',
+          tel: '',
+          address: '',
+        },
+        message: '',
+      },
     };
   },
   methods: {
@@ -192,7 +219,9 @@ export default {
         .then((res) => {
           this.paintings = res.data.products;
         })
-        .catch(() => {});
+        .catch((err) => {
+          console.log(err.response.data.message);
+        });
     },
     getPainting(id) {
       this.$router.push(`/painting/${id}`);
@@ -203,7 +232,9 @@ export default {
         .then((res) => {
           this.collections = res.data.data;
         })
-        .catch(() => {});
+        .catch((err) => {
+          console.dir(err.response.data.message);
+        });
     },
     addToCollection(id, qty = 1) {
       const collection = {
@@ -217,10 +248,37 @@ export default {
         .then((res) => {
           if (res.data.success) {
             // eslint-disable-next-line no-alert
-            alert(`${this.product.title}已收藏`);
+            alert('已收藏');
+            this.getCollections();
           }
         })
-        .catch(() => {});
+        .catch((res) => {
+          console.log(res.response.data.message);
+        });
+    },
+    removeCollections() {
+      this.$http
+        .delete(`${process.env.VUE_APP_API}/api/${process.env.VUE_APP_PATH}/carts`)
+        .then((res) => {
+          // eslint-disable-next-line no-alert
+          alert(res.data.message);
+          this.getCollections();
+        })
+        .catch((err) => {
+          console.log(err.response.data.message);
+        });
+    },
+    sendCollections() {
+      this.$http
+        .post(`${process.env.VUE_APP_API}/api/${process.env.VUE_APP_PATH}/order`, { data: this.data })
+        .then((res) => {
+          this.$refs.collectionForm.resetForm();
+          // eslint-disable-next-line no-alert
+          alert(res.data.message);
+        })
+        .catch((err) => {
+          console.log(err.response.data.message);
+        });
     },
   },
   mounted() {

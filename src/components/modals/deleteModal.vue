@@ -22,7 +22,7 @@
           ></button>
         </div>
         <div class="modal-body">
-          是否刪除 <strong class="text-danger"></strong> (刪除後將無法恢復)。
+          是否刪除 <strong class="text-danger">{{ painting.title }}</strong> (刪除後將無法恢復)。
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
@@ -34,3 +34,16 @@
     </div>
   </div>
 </template>
+
+<script>
+import modalMixin from '@/mixins/modalMixin';
+
+export default {
+  data() {
+    return {};
+  },
+  props: ['painting'],
+  mixins: [modalMixin],
+
+};
+</script>

@@ -1,4 +1,3 @@
-<script>
 import Modal from 'bootstrap/js/dist/modal';
 
 export default {
@@ -14,4 +13,3 @@ export default {
     this.modal = new Modal(this.$refs.modal);
   },
 };
-</script>

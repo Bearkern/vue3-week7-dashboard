@@ -1,7 +1,7 @@
 <template>
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container-fluid">
-      <router-link class="navbar-brand" to="/admin">李曉寧水彩畫家畫作管理</router-link>
+      <router-link class="navbar-brand" to="/admin">畫作管理</router-link>
       <button
         class="navbar-toggler"
         type="button"
