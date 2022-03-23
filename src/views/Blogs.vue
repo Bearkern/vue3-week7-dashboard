@@ -1,5 +1,6 @@
 <template>
   <div class="container">
+    <Loading :active="isLoading" :z-index="1060"></Loading>
     <div class="row row-cols-1 row-cols-md-2 g-4">
       <template v-for="article in articles" :key="article.id">
         <div class="col">
@@ -29,17 +30,23 @@
 export default {
   data() {
     return {
+      isLoading: false,
       articles: [],
     };
   },
   methods: {
     getArticles() {
+      this.isLoading = true;
       this.$http
         .get(`${process.env.VUE_APP_API}/api/${process.env.VUE_APP_PATH}/articles`)
         .then((res) => {
           this.articles = res.data.articles;
+          this.isLoading = false;
         })
-        .catch(() => {});
+        .catch((err) => {
+          this.isLoading = false;
+          this.$httpMessageState(err, '錯誤訊息');
+        });
     },
   },
   mounted() {

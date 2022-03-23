@@ -1,5 +1,6 @@
 <template>
   <div class="container">
+    <Loading :active="isLoading" :z-index="1060"></Loading>
     <nav aria-label="breadcrumb">
       <ol class="breadcrumb">
         <li class="breadcrumb-item"><router-link to="/">部落格列表</router-link></li>
@@ -24,18 +25,24 @@
 export default {
   data() {
     return {
+      isLoading: false,
       article: {},
       id: '',
     };
   },
   methods: {
     getArticle() {
+      this.isLoading = true;
       this.$http
         .get(`${process.env.VUE_APP_API}/api/${process.env.VUE_APP_PATH}/article/${this.id}`)
         .then((res) => {
           this.article = res.data.article;
+          this.isLoading = false;
         })
-        .catch(() => {});
+        .catch((err) => {
+          this.isLoading = false;
+          this.$httpMessageState(err.response, '錯誤訊息');
+        });
     },
   },
   mounted() {

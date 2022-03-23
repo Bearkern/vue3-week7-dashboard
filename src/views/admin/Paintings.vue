@@ -1,4 +1,5 @@
 <template>
+  <h1>畫作管理</h1>
   <div>
     <Loading :active="isLoading" :z-index="1060"></Loading>
     <div class="text-end mt-4">
