@@ -1,7 +1,7 @@
 <template>
   <div class="container">
+    <Loading :active="isLoading" :z-index="1060"></Loading>
     <div class="mt-4">
-      <!-- 產品列表 -->
       <table class="table align-middle">
         <thead>
           <tr>
@@ -23,24 +23,32 @@
               <a href="#" class="text-dark">{{ painting.title }}</a>
             </td>
             <td>
-              <div class="h5">2022</div>
+              <div class="h5">{{ painting.year }}</div>
             </td>
             <td>
               <div class="btn-group btn-group-sm">
                 <button
                   type="button"
                   class="btn btn-outline-secondary"
+                  :disabled="state.paintingLoading === painting.id || !painting.is_enabled"
                   @click="getPainting(painting.id)"
                 >
-                  <span class="spinner-border spinner-grow-sm"></span>
+                  <span
+                    class="spinner-border spinner-grow-sm"
+                    v-if="state.paintingLoading === painting.id"
+                  ></span>
                   畫作細節
                 </button>
                 <button
                   type="button"
                   class="btn btn-outline-danger"
+                  :disabled="state.paintingLoading === painting.id || !painting.is_enabled"
                   @click="addToCollection(painting.id)"
                 >
-                  <span class="spinner-border spinner-grow-sm"></span>
+                  <span
+                    class="spinner-border spinner-grow-sm"
+                    v-if="state.paintingLoading === painting.id"
+                  ></span>
                   加到收藏
                 </button>
               </div>
@@ -48,7 +56,6 @@
           </tr>
         </tbody>
       </table>
-      <!-- 購物車列表 -->
       <div class="text-end">
         <button class="btn btn-outline-danger" type="button" @click="removeCollections">
           清空收藏
@@ -67,7 +74,12 @@
           <template v-for="collection in collections.carts" :key="collection.id">
             <tr>
               <td>
-                <button type="button" class="btn btn-outline-danger btn-sm">
+                <button
+                  type="button"
+                  class="btn btn-outline-danger btn-sm"
+                  :disabled="state.paintingLoading === painting.id"
+                  @click="removeCollection(collection.id)"
+                >
                   <i class="bi bi-x"></i>
                 </button>
               </td>
@@ -91,23 +103,7 @@
             </tr>
           </template>
         </tbody>
-        <tfoot>
-          <tr>
-            <td colspan="3" class="text-end">數量</td>
-            <td class="text-end">total</td>
-          </tr>
-          <tr>
-            <td colspan="3" class="text-end text-success">折扣價</td>
-            <td class="text-end text-success">final_total</td>
-          </tr>
-        </tfoot>
       </table>
-      <div class="input-group mb-3 input-group-sm">
-        <input type="text" class="form-control" placeholder="請輸入優惠碼" />
-        <div class="input-group-append">
-          <button class="btn btn-outline-secondary" type="button">套用優惠碼</button>
-        </div>
-      </div>
     </div>
 
     <div class="my-5 row justify-content-center">
@@ -119,7 +115,7 @@
             name="姓名"
             type="text"
             class="form-control"
-            v-model="data.user.name"
+            v-model="form.user.name"
             :class="{ 'is-invalid': errors['姓名'] }"
             placeholder="請輸入姓名"
             rules="required"
@@ -134,7 +130,7 @@
             name="email"
             type="email"
             class="form-control"
-            v-model="data.user.email"
+            v-model="form.user.email"
             :class="{ 'is-invalid': errors['email'] }"
             placeholder="請輸入 Email"
             rules="email|required"
@@ -149,7 +145,7 @@
             name="電話"
             type="tel"
             class="form-control"
-            v-model="data.user.tel"
+            v-model="form.user.tel"
             :class="{ 'is-invalid': errors['電話'] }"
             placeholder="請輸入電話"
             rules="required|min:8|max:10"
@@ -164,7 +160,7 @@
             name="地址"
             type="text"
             class="form-control"
-            v-model="data.user.address"
+            v-model="form.user.address"
             :class="{ 'is-invalid': errors['地址'] }"
             placeholder="請輸入地址"
             rules="required"
@@ -178,14 +174,16 @@
             name="message"
             id="message"
             class="form-control"
-            v-model="data.message"
+            v-model="form.message"
             cols="30"
             rows="10"
             as="textarea"
           ></Field>
         </div>
         <div class="text-end">
-          <button class="btn btn-danger" type="submit">送出收藏</button>
+          <button class="btn btn-danger" type="submit" :disabled="!collections.carts.length">
+            友誼收藏
+          </button>
         </div>
       </Form>
     </div>
@@ -196,12 +194,16 @@
 export default {
   data() {
     return {
+      isLoading: false,
       paintings: [],
       painting: {},
       collections: {
         carts: [],
       },
-      data: {
+      state: {
+        paintingLoading: '',
+      },
+      form: {
         user: {
           name: '',
           email: '',
@@ -214,29 +216,37 @@ export default {
   },
   methods: {
     getPaintings() {
+      this.isLoading = true;
       this.$http
         .get(`${process.env.VUE_APP_API}/api/${process.env.VUE_APP_PATH}/products/all`)
         .then((res) => {
           this.paintings = res.data.products;
+          this.isLoading = false;
         })
         .catch((err) => {
-          console.log(err.response.data.message);
+          this.isLoading = false;
+          this.$httpMessageState(err.response, '錯誤訊息');
         });
     },
     getPainting(id) {
       this.$router.push(`/painting/${id}`);
     },
     getCollections() {
+      this.isLoading = true;
       this.$http
         .get(`${process.env.VUE_APP_API}/api/${process.env.VUE_APP_PATH}/cart`)
         .then((res) => {
           this.collections = res.data.data;
+          this.isLoading = false;
         })
         .catch((err) => {
-          console.dir(err.response.data.message);
+          this.isLoading = false;
+          this.$httpMessageState(err.response, '錯誤訊息');
         });
     },
     addToCollection(id, qty = 1) {
+      this.isLoading = true;
+      this.state.paintingLoading = id;
       const collection = {
         product_id: id,
         qty,
@@ -247,37 +257,64 @@ export default {
         })
         .then((res) => {
           if (res.data.success) {
-            // eslint-disable-next-line no-alert
-            alert('已收藏');
             this.getCollections();
+            this.isLoading = false;
+            this.state.paintingLoading = '';
+            this.$httpMessageState(res, '收藏');
           }
         })
-        .catch((res) => {
-          console.log(res.response.data.message);
+        .catch((err) => {
+          this.isLoading = false;
+          this.state.paintingLoading = '';
+          this.$httpMessageState(err, '收藏');
+        });
+    },
+    removeCollection(id) {
+      this.isLoading = true;
+      this.state.paintingLoading = id;
+      this.$http
+        .delete(`${process.env.VUE_APP_API}/api/${process.env.VUE_APP_PATH}/cart/${id}`)
+        .then((res) => {
+          this.state.paintingLoading = '';
+          this.getCollections();
+          this.isLoading = false;
+          this.$httpMessageState(res, '移除收藏品項');
+        })
+        .catch((err) => {
+          this.state.paintingLoading = '';
+          this.isLoading = false;
+          this.$httpMessageState(err.response, '移除收藏品項');
         });
     },
     removeCollections() {
+      this.isLoading = true;
       this.$http
         .delete(`${process.env.VUE_APP_API}/api/${process.env.VUE_APP_PATH}/carts`)
         .then((res) => {
-          // eslint-disable-next-line no-alert
-          alert(res.data.message);
           this.getCollections();
+          this.isLoading = false;
+          this.$httpMessageState(res, '清空收藏');
         })
         .catch((err) => {
-          console.log(err.response.data.message);
+          this.isLoading = false;
+          this.$httpMessageState(err.response, '清空收藏');
         });
     },
     sendCollections() {
+      this.isLoading = true;
       this.$http
-        .post(`${process.env.VUE_APP_API}/api/${process.env.VUE_APP_PATH}/order`, { data: this.data })
+        .post(`${process.env.VUE_APP_API}/api/${process.env.VUE_APP_PATH}/order`, {
+          data: this.form,
+        })
         .then((res) => {
           this.$refs.collectionForm.resetForm();
-          // eslint-disable-next-line no-alert
-          alert(res.data.message);
+          this.$router.push(`/checkCollections/${res.data.orderId}`);
+          this.isLoading = false;
+          this.$httpMessageState(res, '友誼收藏');
         })
         .catch((err) => {
-          console.log(err.response.data.message);
+          this.isLoading = false;
+          this.$httpMessageState(err.response, '友誼收藏');
         });
     },
   },

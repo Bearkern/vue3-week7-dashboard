@@ -38,7 +38,13 @@
               <div class="mb-3">
                 <label for="uploadImage" class="form-label"
                   >或 上傳圖片
-                  <i class="fas fa-spinner fa-spin"></i>
+                  <div
+                    v-if="state.fileLoading"
+                    class="spinner-border spinner-border-sm"
+                    role="status"
+                  >
+                    <span class="visually-hidden">Loading...</span>
+                  </div>
                 </label>
                 <input
                   type="file"
@@ -49,29 +55,6 @@
                 />
               </div>
               <img class="img-fluid" :src="tempPainting.imageUrl" />
-              <!-- 多圖 -->
-              <div class="mt-5" v-if="tempProduct.imagesUrl">
-                <div class="mb-3" v-for="(image, index) in tempPainting.imagesUrl" :key="index">
-                  <label for="multiImageUpload" class="form-label"
-                    >多圖上傳
-                    <i class="fas fa-spinner fa-spin"></i>
-                  </label>
-                  <input
-                    type="url"
-                    id="multiImageUpload"
-                    class="form-control"
-                    v-model="tempPainting.imagesUrl[index]"
-                    placeholder="請輸入連結"
-                  />
-                  <div>
-                    <img class="img-fluid" :src="image" />
-                  </div>
-                  <button type="button" class="btn btn-outline-danger">移除</button>
-                </div>
-                <div>
-                  <button class="btn btn-outline-primary btn-sm d-block w-100">新增圖片</button>
-                </div>
-              </div>
             </div>
             <div class="col-sm-8">
               <div class="mb-3">
@@ -208,18 +191,22 @@ export default {
   data() {
     return {
       tempPainting: {},
+      state: {},
     };
   },
   props: {
     painting: {
       type: Object,
-      default() { return {}; },
+      default() {
+        return {};
+      },
     },
     isNew: {
       type: Boolean,
       default: false,
     },
   },
+  inject: ['emitter'],
   mixins: [modalMixin],
   watch: {
     painting() {
@@ -234,6 +221,7 @@ export default {
   },
   methods: {
     uploadImage() {
+      this.state.fileLoading = true;
       const uploadedImage = this.$refs.uploadImage.files[0];
       const formData = new FormData();
       formData.append('file-to-upload', uploadedImage);
@@ -242,18 +230,29 @@ export default {
           headers: { 'Content-Type': 'multipart/form-data' },
         })
         .then((res) => {
+          this.state.fileLoading = false;
           if (res.data.success) {
             this.tempPainting.imageUrl = res.data.imageUrl;
             this.$refs.uploadImage.value = '';
+            this.emitter.emit('push-message', {
+              style: 'success',
+              title: '圖片上傳結果',
+              content: res.data.message,
+            });
           } else {
             this.$refs.uploadImage.value = '';
+            this.emitter.emit('push-message', {
+              style: 'danger',
+              title: '圖片上傳失敗',
+              content: res.data.message,
+            });
           }
         })
         .catch((err) => {
-          console.log(err.response);
+          this.state.fileLoading = false;
+          this.$httpMessageState(err.response, '圖片上傳');
         });
     },
   },
-  mounted() {},
 };
 </script>

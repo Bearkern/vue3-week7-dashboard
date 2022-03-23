@@ -22,6 +22,10 @@ const routes = [
         component: () => import('../views/Painting.vue'),
       },
       {
+        path: 'checkCollections/:collectionId',
+        component: () => import('../views/CheckCollections.vue'),
+      },
+      {
         path: 'login',
         component: () => import('../views/Login.vue'),
       },

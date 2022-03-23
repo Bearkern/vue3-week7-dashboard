@@ -10,7 +10,7 @@
       <article class="col-8">
         <h2>{{ article.title }}</h2>
         <p>
-          <small class="text-muted">{{ $filter.date(article.create_at) }}</small> -
+          <small class="text-muted">{{ $filters.date(article.create_at) }}</small> -
           <small class="text-muted">作者：{{ article.author }}</small>
         </p>
         <img alt="" class="img-fluid mb-3" :src="article.imageUrl"/>

@@ -33,9 +33,10 @@ export default {
       .post(`${process.env.VUE_APP_API}/api/user/check`)
       .then((res) => {
         this.loginStatus = res.data.success;
+        this.$httpMessageState(res, '登入');
       })
       .catch((err) => {
-        console.log(err.response.data.message);
+        this.$httpMessageState(err.response);
         this.$router.push('/login');
       });
   },

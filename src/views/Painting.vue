@@ -1,5 +1,6 @@
 <template>
   <div class="container">
+    <Loading :active="isLoading" :z-index="1060"></Loading>
     <nav aria-label="breadcrumb">
       <ol class="breadcrumb">
         <li class="breadcrumb-item">
@@ -30,35 +31,45 @@
 export default {
   data() {
     return {
+      isLoading: false,
       id: '',
       product: {},
     };
   },
   methods: {
     getPainting() {
+      this.isLoading = true;
       this.$http
         .get(`${process.env.VUE_APP_API}/api/${process.env.VUE_APP_PATH}/product/${this.id}`)
         .then((res) => {
           this.product = res.data.product;
+          this.isLoading = false;
         })
-        .catch(() => {});
+        .catch((res) => {
+          this.isLoading = false;
+          this.$httpMessageState(res.response, '錯誤訊息');
+        });
     },
     addToCollection(id, qty = 1) {
+      this.isLoading = true;
+
       const collection = {
         product_id: id,
         qty,
       };
+
       this.$http
         .post(`${process.env.VUE_APP_API}/api/${process.env.VUE_APP_PATH}/cart`, {
           data: collection,
         })
         .then((res) => {
-          if (res.data.success) {
-            // eslint-disable-next-line no-alert
-            alert(`${this.product.title}已收藏`);
-          }
+          this.isLoading = false;
+          this.$httpMessageState(res, '加入收藏');
         })
-        .catch(() => {});
+        .catch((err) => {
+          this.isLoading = false;
+          this.$httpMessageState(err, '加入收藏');
+        });
     },
   },
   mounted() {

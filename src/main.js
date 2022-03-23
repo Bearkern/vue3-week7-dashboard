@@ -2,7 +2,7 @@ import { createApp } from 'vue';
 
 import 'bootstrap-icons/font/bootstrap-icons.css';
 
-import loading from 'vue-loading-overlay';
+import Loading from 'vue-loading-overlay';
 import 'vue-loading-overlay/dist/vue-loading.css';
 
 import {
@@ -19,6 +19,7 @@ import App from './App.vue';
 import router from './router';
 import date from './utilities/filters/date';
 import currency from './utilities/filters/currency';
+import httpMessageState from './utilities/pushMessageState';
 
 Object.keys(AllRules).forEach((rule) => {
   defineRule(rule, AllRules[rule]);
@@ -33,12 +34,14 @@ setLocale('zh_TW');
 
 const app = createApp(App);
 
-app.config.globalProperties.$filter = {
+app.config.globalProperties.$filters = {
   date,
   currency,
 };
 
-app.component(loading);
+app.config.globalProperties.$httpMessageState = httpMessageState;
+
+app.component('Loading', Loading);
 app.component('Form', Form);
 app.component('Field', Field);
 app.component('ErrorMessage', ErrorMessage);

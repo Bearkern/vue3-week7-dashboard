@@ -8,9 +8,15 @@
 
 <script>
 import Navbar from '@/components/Navbar.vue';
+import emitter from '@/utilities/mitt';
 import ToastMessage from '@/components/ToastMessage.vue';
 
 export default {
+  provide() {
+    return {
+      emitter,
+    };
+  },
   components: {
     Navbar,
     ToastMessage,

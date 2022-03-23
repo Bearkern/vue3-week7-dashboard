@@ -1,6 +1,7 @@
 <template>
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container-fluid">
+      <ToastMessage></ToastMessage>
       <router-link class="navbar-brand" to="/admin">畫作管理</router-link>
       <button
         class="navbar-toggler"
@@ -35,15 +36,20 @@
 </template>
 
 <script>
+import ToastMessage from '@/components/ToastMessage.vue';
+
 export default {
+  components: {
+    ToastMessage,
+  },
   methods: {
     logout() {
       this.$http.post(`${process.env.VUE_APP_API}/logout`)
-        .then((res) => {
-          console.log(res);
+        .then(() => {
+          this.$router.push('/login');
         })
         .catch((err) => {
-          console.dir(err);
+          this.$httpMessageState(err.response, '登出');
         });
     },
   },

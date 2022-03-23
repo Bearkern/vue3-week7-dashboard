@@ -12,8 +12,8 @@
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title" id="exampleModalLabel">
-            <span>新增優惠卷</span>
-            <span>編輯優惠卷</span>
+            <span v-if="isNew">新增優惠卷</span>
+            <span v-else>編輯優惠卷</span>
           </h5>
           <button
             type="button"
@@ -25,15 +25,27 @@
         <div class="modal-body">
           <div class="mb-3">
             <label for="title">標題</label>
-            <input type="text" class="form-control" id="title" placeholder="請輸入標題" />
+            <input
+              type="text"
+              class="form-control"
+              id="title"
+              placeholder="請輸入標題"
+              v-model="tempCoupon.title"
+            />
           </div>
           <div class="mb-3">
             <label for="coupon_code">優惠碼</label>
-            <input type="text" class="form-control" id="coupon_code" placeholder="請輸入優惠碼" />
+            <input
+              type="text"
+              class="form-control"
+              id="coupon_code"
+              placeholder="請輸入優惠碼"
+              v-model="tempCoupon.code"
+            />
           </div>
           <div class="mb-3">
             <label for="due_date">到期日</label>
-            <input type="date" class="form-control" id="due_date" />
+            <input type="date" class="form-control" id="due_date" v-model="due_date" />
           </div>
           <div class="mb-3">
             <label for="price">折扣百分比</label>
@@ -42,6 +54,7 @@
               class="form-control"
               id="price"
               min="0"
+              v-model="tempCoupon.percent"
               placeholder="請輸入折扣百分比"
             />
           </div>
@@ -53,6 +66,7 @@
                 :true-value="1"
                 :false-value="0"
                 id="is_enabled"
+                v-model="tempCoupon.is_enabled"
               />
               <label class="form-check-label" for="is_enabled">是否啟用</label>
             </div>
@@ -60,9 +74,47 @@
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          <button type="button" class="btn btn-primary"></button>
+          <button type="button" class="btn btn-primary" @click="$emit('update-coupon', tempCoupon)">
+            {{ isNew ? '新增優惠券' : '更新優惠券' }}
+          </button>
         </div>
       </div>
     </div>
   </div>
 </template>
+
+<script>
+import modalMixin from '@/mixins/modalMixin';
+
+export default {
+  data() {
+    return {
+      tempCoupon: {},
+      due_date: '',
+    };
+  },
+  props: {
+    coupon: {
+      type: Object,
+      default() {
+        return {};
+      },
+    },
+    isNew: {
+      type: Boolean,
+      default: true,
+    },
+  },
+  watch: {
+    coupon() {
+      this.tempCoupon = this.coupon;
+      const dateTime = new Date(this.tempCoupon.due_date * 1000).toISOString().split('T');
+      [this.due_date] = dateTime;
+    },
+    due_date() {
+      this.tempCoupon.due_date = Math.floor(new Date(this.due_date) / 1000);
+    },
+  },
+  mixins: [modalMixin],
+};
+</script>

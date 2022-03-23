@@ -1,6 +1,6 @@
 <template>
-  <h2>登入後台頁面</h2>
   <div class="container mt-5">
+    <Loading :active="isLoading" :z-index="1060"></Loading>
     <div class="my-5 row justify-content-center">
       <Form class="col-md-6" v-slot="{ errors }" @submit="login">
         <div class="mb-2">
@@ -49,10 +49,12 @@ export default {
         username: '',
         password: '',
       },
+      isLoading: false,
     };
   },
   methods: {
     login() {
+      this.isLoading = true;
       this.$http
         .post(`${process.env.VUE_APP_API}/admin/signin`, this.user)
         .then((res) => {
@@ -60,9 +62,12 @@ export default {
           document.cookie = `hexToken=${token}; expires=${new Date(expired)}`;
 
           this.$router.push('/admin');
+          this.isLoading = false;
         })
         .catch((err) => {
-          console.dir(err.response.data.message);
+          this.isLoading = false;
+          console.log(err.response.data);
+          this.$httpMessageState(err.response, '登入');
         });
     },
   },
